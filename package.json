@@ -1,0 +1,26 @@
+{
+  "name": "film-1900-layer",
+  "version": "1.0.0",
+  "description": "Zero-dependency browser-native 1900s silent-film style video effect. Pure WebGL2. Real-time preview + export-ready.",
+  "main": "src/film1900.js",
+  "module": "src/film1900.js",
+  "type": "module",
+  "scripts": {
+    "demo": "npx serve demo"
+  },
+  "keywords": [
+    "1900",
+    "silent-film",
+    "vintage",
+    "film-grain",
+    "webgl",
+    "video-effect",
+    "browser",
+    "zero-dependency"
+  ],
+  "license": "MIT",
+  "files": [
+    "src",
+    "README.md"
+  ]
+}
