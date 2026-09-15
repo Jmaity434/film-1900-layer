@@ -1,7 +1,7 @@
 {
   "name": "film-1900-layer",
   "version": "1.0.0",
-  "description": "Zero-dependency browser-native 1900s silent-film style video effect. Pure WebGL2. Real-time preview + export-ready.",
+  "description": "Browser-native 1900s silent-film / old cinema video effect. Pure WebGL2, zero dependencies. Real-time film grain, scratches, dust, flicker. Live preview + export.",
   "main": "src/film1900.js",
   "module": "src/film1900.js",
   "type": "module",
@@ -9,16 +9,34 @@
     "demo": "npx serve demo"
   },
   "keywords": [
-    "1900",
+    "old-film-effect",
     "silent-film",
-    "vintage",
+    "vintage-film",
     "film-grain",
+    "film-scratches",
     "webgl",
+    "webgl2",
     "video-effect",
+    "video-filter",
+    "cinema-effect",
+    "1900",
+    "early-cinema",
     "browser",
-    "zero-dependency"
+    "javascript",
+    "zero-dependency",
+    "real-time",
+    "mediarecorder",
+    "film-emulation"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jmaity434/film-1900-layer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Jmaity434/film-1900-layer/issues"
+  },
+  "homepage": "https://github.com/Jmaity434/film-1900-layer#readme",
   "files": [
     "src",
     "README.md"
