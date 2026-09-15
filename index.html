@@ -4,12 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Film 1900 Layer – Live Demo | Old Film Effect WebGL</title>
-  <meta name="description" content="Live demo of Film 1900 Layer — zero-dependency WebGL2 silent-film / vintage film grain, scratches, dust and flicker effect for HTML5 video." />
+  <meta name="description" content="Upload a video, apply real-time 1900s silent-film effect, and download the result. Zero-dependency WebGL2." />
   <style>
     :root {
       --bg: #0a0a0a;
       --accent: #c9a227;
       --text: #e8e0d0;
+      --muted: #888;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -20,19 +21,20 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
+      padding: 1.5rem 1rem 3rem;
     }
     h1 {
       font-weight: 500;
       letter-spacing: 0.08em;
       color: var(--accent);
-      margin-bottom: 0.5rem;
-      font-size: 1.4rem;
+      margin-bottom: 0.35rem;
+      font-size: 1.35rem;
     }
     p.sub {
       opacity: 0.7;
-      margin-bottom: 1.5rem;
-      font-size: 0.9rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.88rem;
+      text-align: center;
     }
     .stage {
       position: relative;
@@ -52,57 +54,101 @@
       object-fit: contain;
     }
     video { opacity: 0; pointer-events: none; }
-    .controls {
-      margin-top: 1.5rem;
+    .upload-row {
+      margin-top: 1.1rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem 1.5rem;
+      gap: 0.7rem;
+      align-items: center;
+      justify-content: center;
+    }
+    .file-btn {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+    .file-btn input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .controls {
+      margin-top: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem 1.3rem;
       max-width: 960px;
       width: 100%;
       justify-content: center;
     }
-    label {
+    label.slider {
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
-      font-size: 0.75rem;
+      gap: 0.25rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       opacity: 0.85;
     }
     input[type="range"] {
-      width: 140px;
+      width: 130px;
       accent-color: var(--accent);
     }
     .btn-row {
-      margin-top: 1.2rem;
+      margin-top: 1.1rem;
       display: flex;
-      gap: 0.8rem;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      justify-content: center;
     }
-    button {
+    button, .file-btn > span {
       background: transparent;
       border: 1px solid var(--accent);
       color: var(--accent);
-      padding: 0.5rem 1.2rem;
+      padding: 0.5rem 1.1rem;
       border-radius: 2px;
       cursor: pointer;
       font-size: 0.85rem;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       transition: background 0.2s, color 0.2s;
+      display: inline-block;
     }
-    button:hover {
+    button:hover, .file-btn:hover > span {
       background: var(--accent);
       color: #111;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
     button.active {
       background: var(--accent);
       color: #111;
     }
-    .note {
-      margin-top: 2rem;
+    button.primary {
+      background: var(--accent);
+      color: #111;
+      font-weight: 600;
+    }
+    button.primary:hover {
+      filter: brightness(1.08);
+    }
+    .status {
+      margin-top: 0.85rem;
       font-size: 0.8rem;
-      opacity: 0.55;
-      max-width: 640px;
+      color: var(--muted);
+      min-height: 1.2em;
+      text-align: center;
+    }
+    .status.busy { color: var(--accent); }
+    .note {
+      margin-top: 1.5rem;
+      font-size: 0.78rem;
+      opacity: 0.5;
+      max-width: 560px;
       text-align: center;
       line-height: 1.5;
     }
@@ -111,33 +157,42 @@
 </head>
 <body>
   <h1>FILM 1900 LAYER</h1>
-  <p class="sub">Pure WebGL · Zero dependency · Real-time preview + export ready</p>
+  <p class="sub">Upload a video → real-time 1900s effect → download if you like it</p>
 
   <div class="stage">
-    <video id="src" crossorigin="anonymous" playsinline loop muted
-           src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"></video>
+    <video id="src" playsinline loop muted></video>
     <canvas id="out"></canvas>
   </div>
 
+  <div class="upload-row">
+    <label class="file-btn">
+      <span>Upload video</span>
+      <input type="file" id="file" accept="video/*" />
+    </label>
+    <button type="button" id="sample">Use sample video</button>
+  </div>
+
   <div class="controls">
-    <label>Sepia <input type="range" id="sepia" min="0" max="1" step="0.01" value="0.72"></label>
-    <label>Grain <input type="range" id="grain" min="0" max="1" step="0.01" value="0.42"></label>
-    <label>Scratches <input type="range" id="scratches" min="0" max="1" step="0.01" value="0.48"></label>
-    <label>Dust <input type="range" id="dust" min="0" max="1" step="0.01" value="0.28"></label>
-    <label>Flicker <input type="range" id="flicker" min="0" max="1" step="0.01" value="0.22"></label>
-    <label>Vignette <input type="range" id="vignette" min="0" max="1" step="0.01" value="0.38"></label>
-    <label>Intensity <input type="range" id="intensity" min="0" max="1" step="0.01" value="1"></label>
+    <label class="slider">Sepia <input type="range" id="sepia" min="0" max="1" step="0.01" value="0.72"></label>
+    <label class="slider">Grain <input type="range" id="grain" min="0" max="1" step="0.01" value="0.42"></label>
+    <label class="slider">Scratches <input type="range" id="scratches" min="0" max="1" step="0.01" value="0.48"></label>
+    <label class="slider">Dust <input type="range" id="dust" min="0" max="1" step="0.01" value="0.28"></label>
+    <label class="slider">Flicker <input type="range" id="flicker" min="0" max="1" step="0.01" value="0.22"></label>
+    <label class="slider">Vignette <input type="range" id="vignette" min="0" max="1" step="0.01" value="0.38"></label>
+    <label class="slider">Intensity <input type="range" id="intensity" min="0" max="1" step="0.01" value="1"></label>
   </div>
 
   <div class="btn-row">
-    <button id="play">Play</button>
-    <button id="mono">Monochrome</button>
-    <button id="export">Export Sample (5s)</button>
+    <button type="button" id="play">Play</button>
+    <button type="button" id="mono">Monochrome</button>
+    <button type="button" id="download" class="primary" disabled>Download video</button>
   </div>
 
+  <p class="status" id="status">Upload a video or load the sample to begin.</p>
+
   <p class="note">
-    Live demo of <a href="https://github.com/Jmaity434/film-1900-layer">Film 1900 Layer</a>.<br>
-    Use any CORS-enabled video. Same layer powers preview and export via captureStream.
+    All processing stays in your browser. Nothing is uploaded to a server.<br>
+    <a href="https://github.com/Jmaity434/film-1900-layer">Source on GitHub</a>
   </p>
 
   <script type="module">
@@ -145,68 +200,189 @@
 
     const video = document.getElementById('src');
     const canvas = document.getElementById('out');
+    const statusEl = document.getElementById('status');
+    const downloadBtn = document.getElementById('download');
+    const playBtn = document.getElementById('play');
 
-    const layer = new Film1900Layer({
-      video,
-      canvas,
-      sepia: 0.72,
-      grain: 0.42,
-      scratches: 0.48,
-      dust: 0.28,
-      flicker: 0.22,
-      vignette: 0.38,
-      intensity: 1.0,
-      monochrome: false,
+    const SAMPLE =
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+
+    let layer = null;
+    let mono = false;
+    let objectUrl = null;
+    let recording = false;
+
+    function setStatus(msg, busy = false) {
+      statusEl.textContent = msg;
+      statusEl.classList.toggle('busy', busy);
+    }
+
+    function ensureLayer() {
+      if (layer) return layer;
+      layer = new Film1900Layer({
+        video,
+        canvas,
+        sepia: 0.72,
+        grain: 0.42,
+        scratches: 0.48,
+        dust: 0.28,
+        flicker: 0.22,
+        vignette: 0.38,
+        intensity: 1.0,
+        monochrome: false,
+      });
+      layer.start();
+      return layer;
+    }
+
+    function loadSource(url, { isBlob = false } = {}) {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+      }
+      if (isBlob) objectUrl = url;
+
+      video.loop = true;
+      video.muted = true;
+      video.src = url;
+      video.load();
+
+      ensureLayer();
+      downloadBtn.disabled = false;
+
+      video.onloadeddata = () => {
+        setStatus('Ready — adjust sliders, then Play or Download.');
+        video.play().then(() => {
+          playBtn.textContent = 'Pause';
+        }).catch(() => {
+          playBtn.textContent = 'Play';
+          setStatus('Ready — press Play to start.');
+        });
+      };
+    }
+
+    // Upload
+    document.getElementById('file').addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('video/')) {
+        setStatus('Please choose a video file.');
+        return;
+      }
+      setStatus('Loading video…', true);
+      const url = URL.createObjectURL(file);
+      loadSource(url, { isBlob: true });
     });
 
-    layer.start();
+    // Sample
+    document.getElementById('sample').addEventListener('click', () => {
+      setStatus('Loading sample…', true);
+      loadSource(SAMPLE);
+    });
 
-    ['sepia','grain','scratches','dust','flicker','vignette','intensity'].forEach(id => {
-      document.getElementById(id).addEventListener('input', e => {
+    // Sliders
+    ['sepia', 'grain', 'scratches', 'dust', 'flicker', 'vignette', 'intensity'].forEach((id) => {
+      document.getElementById(id).addEventListener('input', (e) => {
+        if (!layer) return;
         layer.setOptions({ [id]: parseFloat(e.target.value) });
       });
     });
 
-    document.getElementById('play').addEventListener('click', () => {
+    // Play / Pause
+    playBtn.addEventListener('click', () => {
+      if (!video.src) {
+        setStatus('Upload a video or load the sample first.');
+        return;
+      }
       if (video.paused) {
         video.play();
-        document.getElementById('play').textContent = 'Pause';
+        playBtn.textContent = 'Pause';
       } else {
         video.pause();
-        document.getElementById('play').textContent = 'Play';
+        playBtn.textContent = 'Play';
       }
     });
 
-    let mono = false;
+    // Monochrome
     document.getElementById('mono').addEventListener('click', () => {
+      if (!layer) return;
       mono = !mono;
       layer.setOptions({ monochrome: mono });
       document.getElementById('mono').classList.toggle('active', mono);
     });
 
-    document.getElementById('export').addEventListener('click', async () => {
-      const btn = document.getElementById('export');
-      btn.disabled = true;
-      btn.textContent = 'Recording…';
+    // Download full processed video
+    downloadBtn.addEventListener('click', async () => {
+      if (!layer || !video.src || recording) return;
 
-      const stream = layer.captureStream(24);
-      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+      recording = true;
+      downloadBtn.disabled = true;
+      playBtn.disabled = true;
+      setStatus('Recording processed video… please wait.', true);
+
+      const wasLoop = video.loop;
+      const wasMuted = video.muted;
+      video.loop = false;
+      video.muted = true;
+
+      // Prefer VP9, fall back to default webm
+      let mime = 'video/webm;codecs=vp9';
+      if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
+
+      const stream = layer.captureStream(30);
       const chunks = [];
-      recorder.ondataavailable = e => chunks.push(e.data);
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'film-1900-sample.webm';
-        a.click();
-        btn.disabled = false;
-        btn.textContent = 'Export Sample (5s)';
+      const recorder = new MediaRecorder(stream, {
+        mimeType: mime,
+        videoBitsPerSecond: 4_000_000,
+      });
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
       };
-      recorder.start();
-      setTimeout(() => recorder.stop(), 5000);
+
+      const done = new Promise((resolve) => {
+        recorder.onstop = resolve;
+      });
+
+      const onEnded = () => {
+        if (recorder.state !== 'inactive') recorder.stop();
+      };
+      video.addEventListener('ended', onEnded, { once: true });
+
+      // Safety timeout (max 3 minutes)
+      const safety = setTimeout(() => {
+        if (recorder.state !== 'inactive') recorder.stop();
+      }, 180_000);
+
+      video.currentTime = 0;
+      await video.play().catch(() => {});
+      recorder.start(200);
+
+      await done;
+      clearTimeout(safety);
+      video.removeEventListener('ended', onEnded);
+
+      video.loop = wasLoop;
+      video.muted = wasMuted;
+      video.pause();
+      playBtn.textContent = 'Play';
+
+      const blob = new Blob(chunks, { type: mime.split(';')[0] });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'film-1900-' + Date.now() + '.webm';
+      a.click();
+      URL.revokeObjectURL(a.href);
+
+      recording = false;
+      downloadBtn.disabled = false;
+      playBtn.disabled = false;
+      setStatus('Download started. Check your downloads folder.');
     });
 
-    video.play().catch(() => {});
+    // Auto-load sample for convenience
+    setStatus('Loading sample…', true);
+    loadSource(SAMPLE);
   </script>
 </body>
 </html>
